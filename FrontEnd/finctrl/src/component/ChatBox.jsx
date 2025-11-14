@@ -65,12 +65,19 @@ function ChatBox({ userId, role }) {
     fetchChatList();
     fetchMessages();
 
+    // <-- CHANGE START: Updated logic to only show messages for the selected chat
     socket.on('receiveMessage', (msg) => {
       console.log('Received message:', msg);
-      if (msg.sender === userId || msg.receiver === userId) {
+      
+      // Check if the message belongs to the currently open chat
+      if (
+        (msg.sender === selectedChat?._id && msg.receiver === userId) || // From the selected user to me
+        (msg.receiver === selectedChat?._id && msg.sender === userId)   // From me to the selected user (echo)
+      ) {
         setMessages((prev) => [...prev, msg]);
       }
     });
+    // <-- CHANGE END
 
     socket.on('newMessageNotification', (notificationData) => {
       console.log('New message notification received:', notificationData);
@@ -101,17 +108,27 @@ function ChatBox({ userId, role }) {
     setSelectedChat(chat);
   };
 
+  // <-- CHANGE START: Updated sendMessage to include senderModel and receiverModel
   const sendMessage = () => {
     if (!message.trim() || !selectedChat) return;
+
+    // Determine the models based on the user's role
+    const senderModel = role === 'admin' ? 'Admin' : 'User';
+    const receiverModel = role === 'admin' ? 'User' : 'Admin';
+
     const msg = {
       sender: userId,
       receiver: selectedChat._id,
       content: message,
       timestamp: new Date(),
+      senderModel: senderModel,     // <-- ADDED
+      receiverModel: receiverModel  // <-- ADDED
     };
+    
     socket.emit('sendMessage', msg);
     setMessage('');
   };
+  // <-- CHANGE END
 
   const filteredChats = chatList.filter(chat => {
     const contactName = role === 'admin' ? (chat.username || 'User') : (chat.adminName || 'Admin');
@@ -202,7 +219,7 @@ function ChatBox({ userId, role }) {
               <div className="flex flex-col space-y-3">
                 {messages.map((msg, index) => (
                   <div
-                    key={index}
+                    key={index} // Using index is not ideal, prefer msg._id if available
                     className={`flex ${msg.sender === userId ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
