@@ -15,8 +15,16 @@ const loginUser = async (email, password, role) => {
     const data = await response.json();
     if (!response.ok) throw new Error(data.message || "Login failed");
 
+    // --- CHANGE START ---
+    // Save all necessary items to localStorage
     localStorage.setItem("token", data.token);
     localStorage.setItem("role", data.role);
+    // You must also save the user object for the sidebar to work correctly
+    if (data.user) {
+      localStorage.setItem("user", JSON.stringify(data.user));
+    }
+    // --- CHANGE END ---
+
     console.log("Login successful:", data);
     return data;
   } catch (error) {
@@ -25,7 +33,10 @@ const loginUser = async (email, password, role) => {
   }
 };
 
-const Login = () => {
+// --- CHANGE START ---
+// 1. Accept setIsAuthenticated as a prop
+const Login = ({ setIsAuthenticated }) => {
+// --- CHANGE END ---
   const [formData, setFormData] = useState({ email: "", password: "", role: "user" });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -42,6 +53,12 @@ const Login = () => {
     try {
       const data = await loginUser(formData.email, formData.password, formData.role);
       if (data) {
+        // --- CHANGE START ---
+        // 2. Set the state in App.jsx to true BEFORE navigating
+        setIsAuthenticated(true);
+        // --- CHANGE END ---
+
+        // This navigation logic is correct and will now work
         navigate(formData.role === "admin" ? "/dashboard" : "/dashboard");
       }
     } catch (err) {
