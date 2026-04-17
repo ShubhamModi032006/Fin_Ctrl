@@ -19,13 +19,14 @@ import ProfileDashboard from './component/profiledashboard';
 import Publiceventdetail from './component/publiceventdetail';
 import CalendarTab from './component/CalendarTab'; 
 import ChatBox from './component/ChatBox'; // Added for chat functionality
+import LandingPage from './component/LandingPage';
 
 const AppContent = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
   const [user, setUser] = useState(null); // Added to store decoded user data
   const location = useLocation();
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/';
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -55,14 +56,14 @@ const AppContent = () => {
         />
       )}
       <div
-        className={`flex-1 p-2 h-screen transition-all duration-200 ${
+        className={`flex-1 ${!isAuthPage ? 'p-2' : 'p-0'} h-screen overflow-y-auto transition-all duration-200 ${
           isAuthenticated && !isAuthPage ? (isSidebarCollapsed ? 'ml-18' : 'ml-60') : ''
         }`}
       >
         <Routes>
           <Route
             path="/"
-            element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />}
+            element={isAuthenticated ? <Navigate to="/dashboard" /> : <LandingPage />}
           />
           {/* Auth Routes */}
           <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
